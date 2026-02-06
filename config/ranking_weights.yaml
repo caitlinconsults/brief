@@ -1,0 +1,15 @@
+weights:
+  recency: 0.3
+  source_trust: 0.25
+  lane_affinity: 0.25
+  popularity: 0.1
+  novelty: 0.1
+
+selection:
+  target_digest_size: 20
+  novelty_budget: 0.25
+  min_items_per_cluster: 1
+  max_items_per_lane: 3
+
+recency:
+  half_life_hours: 48

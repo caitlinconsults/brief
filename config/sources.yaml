@@ -1,0 +1,248 @@
+sources:
+  # === BUILDERS LANE (7 sources) ===
+
+  - name: "Simon Willison's Weblog"
+    slug: simon-willison
+    enabled: true
+    fetch_method: rss
+    fetch_url: "https://simonwillison.net/atom/everything/"
+    lanes:
+      primary: builders
+      secondary: []
+    trust_weight: 0.9
+    fetch_cadence: daily
+    content_type: blog_post
+
+  - name: "Hacker News"
+    slug: hacker-news
+    enabled: false
+    fetch_method: api
+    fetch_url: "https://hacker-news.firebaseio.com/v0/"
+    lanes:
+      primary: builders
+      secondary: []
+    trust_weight: 0.8
+    fetch_cadence: daily
+    content_type: news_article
+
+  - name: "Latent Space"
+    slug: latent-space
+    enabled: false
+    fetch_method: rss
+    fetch_url: "https://www.latent.space/feed"
+    lanes:
+      primary: builders
+      secondary: []
+    trust_weight: 0.85
+    fetch_cadence: daily
+    content_type: newsletter
+
+  - name: "OpenPipe"
+    slug: openpipe
+    enabled: false
+    fetch_method: web_scrape
+    fetch_url: "https://openpipe.ai/blog"
+    lanes:
+      primary: builders
+      secondary: []
+    trust_weight: 0.75
+    fetch_cadence: daily
+    content_type: blog_post
+
+  - name: "LangChain Blog"
+    slug: langchain
+    enabled: false
+    fetch_method: rss
+    fetch_url: "https://blog.langchain.dev/rss/"
+    lanes:
+      primary: builders
+      secondary: [business]
+    trust_weight: 0.8
+    fetch_cadence: daily
+    content_type: blog_post
+
+  - name: "Lilian Weng Blog"
+    slug: lilian-weng
+    enabled: false
+    fetch_method: rss
+    fetch_url: "https://lilianweng.github.io/index.xml"
+    lanes:
+      primary: builders
+      secondary: []
+    trust_weight: 0.9
+    fetch_cadence: daily
+    content_type: blog_post
+
+  - name: "Indie Hackers"
+    slug: indie-hackers
+    enabled: false
+    fetch_method: web_scrape
+    fetch_url: "https://www.indiehackers.com/"
+    lanes:
+      primary: builders
+      secondary: [business]
+    trust_weight: 0.6
+    fetch_cadence: daily
+    content_type: news_article
+
+  # === PRODUCT & SPEC THINKING (5 sources) ===
+
+  - name: "Shreyas Doshi Newsletter"
+    slug: shreyas-doshi
+    enabled: false
+    fetch_method: rss
+    fetch_url: "https://shreyas.substack.com/feed"
+    lanes:
+      primary: business
+      secondary: [builders]
+    trust_weight: 0.85
+    fetch_cadence: daily
+    content_type: newsletter
+
+  - name: "Lenny's Newsletter"
+    slug: lennys-newsletter
+    enabled: false
+    fetch_method: rss
+    fetch_url: "https://www.lennysnewsletter.com/feed"
+    lanes:
+      primary: business
+      secondary: []
+    trust_weight: 0.85
+    fetch_cadence: daily
+    content_type: newsletter
+
+  - name: "Not Boring"
+    slug: not-boring
+    enabled: false
+    fetch_method: rss
+    fetch_url: "https://www.notboring.co/feed"
+    lanes:
+      primary: business
+      secondary: []
+    trust_weight: 0.8
+    fetch_cadence: daily
+    content_type: newsletter
+
+  - name: "a16z Blog"
+    slug: a16z
+    enabled: false
+    fetch_method: rss
+    fetch_url: "https://a16z.com/feed/"
+    lanes:
+      primary: business
+      secondary: [builders]
+    trust_weight: 0.8
+    fetch_cadence: daily
+    content_type: blog_post
+
+  - name: "Y Combinator Blog"
+    slug: yc-blog
+    enabled: false
+    fetch_method: rss
+    fetch_url: "https://www.ycombinator.com/blog/rss"
+    lanes:
+      primary: builders
+      secondary: [business]
+    trust_weight: 0.8
+    fetch_cadence: daily
+    content_type: blog_post
+
+  # === SECURITY LANE (4 sources) ===
+
+  - name: "OWASP AI/LLM Top 10"
+    slug: owasp
+    enabled: false
+    fetch_method: api
+    fetch_url: "https://api.github.com/repos/OWASP/www-project-top-10-for-large-language-model-applications/releases"
+    lanes:
+      primary: security
+      secondary: []
+    trust_weight: 0.9
+    fetch_cadence: weekly
+    content_type: report
+
+  - name: "AI Incident Database"
+    slug: ai-incident-db
+    enabled: false
+    fetch_method: api
+    fetch_url: "https://incidentdatabase.ai/"
+    lanes:
+      primary: security
+      secondary: []
+    trust_weight: 0.85
+    fetch_cadence: daily
+    content_type: report
+
+  - name: "Anthropic Safety Blog"
+    slug: anthropic-safety
+    enabled: false
+    fetch_method: web_scrape
+    fetch_url: "https://www.anthropic.com/research"
+    lanes:
+      primary: security
+      secondary: [builders]
+    trust_weight: 0.9
+    fetch_cadence: daily
+    content_type: blog_post
+
+  - name: "Trail of Bits Blog"
+    slug: trail-of-bits
+    enabled: false
+    fetch_method: rss
+    fetch_url: "https://blog.trailofbits.com/feed/"
+    lanes:
+      primary: security
+      secondary: []
+    trust_weight: 0.85
+    fetch_cadence: daily
+    content_type: blog_post
+
+  # === BUSINESS LANE (4 sources) ===
+
+  - name: "McKinsey AI Insights"
+    slug: mckinsey
+    enabled: false
+    fetch_method: web_scrape
+    fetch_url: "https://www.mckinsey.com/capabilities/quantumblack/our-insights"
+    lanes:
+      primary: business
+      secondary: []
+    trust_weight: 0.85
+    fetch_cadence: daily
+    content_type: report
+
+  - name: "Bain AI Brief"
+    slug: bain
+    enabled: false
+    fetch_method: web_scrape
+    fetch_url: "https://www.bain.com/insights/topics/ai/"
+    lanes:
+      primary: business
+      secondary: []
+    trust_weight: 0.85
+    fetch_cadence: daily
+    content_type: report
+
+  - name: "Stripe Sessions"
+    slug: stripe
+    enabled: false
+    fetch_method: web_scrape
+    fetch_url: "https://stripe.com/blog"
+    lanes:
+      primary: business
+      secondary: [builders]
+    trust_weight: 0.8
+    fetch_cadence: daily
+    content_type: blog_post
+
+  - name: "Salesforce Engineering Blog"
+    slug: salesforce-eng
+    enabled: false
+    fetch_method: rss
+    fetch_url: "https://engineering.salesforce.com/feed/"
+    lanes:
+      primary: business
+      secondary: [builders]
+    trust_weight: 0.75
+    fetch_cadence: daily
+    content_type: engineering_blog

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brief — {{ date }}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            line-height: 1.6;
+            padding: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            border-bottom: 1px solid #333;
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -0.02em;
+        }
+
+        .date {
+            color: #888;
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+
+        /* Top 3 section */
+        .top-3 {
+            background: #141414;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .top-3 h2 {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #888;
+            margin-bottom: 1rem;
+        }
+
+        .top-3-item {
+            margin-bottom: 0.75rem;
+            padding-left: 1rem;
+            border-left: 2px solid #555;
+        }
+
+        .top-3-item:last-child { margin-bottom: 0; }
+
+        .top-3-item strong {
+            color: #ffffff;
+            display: block;
+            font-size: 0.95rem;
+        }
+
+        .top-3-item p {
+            color: #aaa;
+            font-size: 0.85rem;
+            margin-top: 0.1rem;
+        }
+
+        /* Cluster sections */
+        .cluster {
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid #222;
+            padding-bottom: 2rem;
+        }
+
+        .cluster:last-child {
+            border-bottom: none;
+        }
+
+        .cluster h2 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 1.25rem;
+            letter-spacing: -0.01em;
+        }
+
+        /* Lane styling */
+        .lane {
+            margin-bottom: 1.25rem;
+            padding: 1rem;
+            border-radius: 6px;
+            background: #141414;
+        }
+
+        .lane-header {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .lane-builders .lane-header { color: #4ecdc4; }
+        .lane-security .lane-header { color: #ff6b6b; }
+        .lane-business .lane-header { color: #ffe66d; }
+
+        .lane-builders { border-left: 3px solid #4ecdc4; }
+        .lane-security { border-left: 3px solid #ff6b6b; }
+        .lane-business { border-left: 3px solid #ffe66d; }
+
+        .lane p {
+            font-size: 0.9rem;
+            color: #ccc;
+            margin-bottom: 0.75rem;
+        }
+
+        /* Links */
+        .deep-links {
+            margin-top: 0.5rem;
+        }
+
+        .deep-links a {
+            display: inline-block;
+            font-size: 0.8rem;
+            color: #7eb8da;
+            text-decoration: none;
+            margin-right: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .deep-links a:hover {
+            text-decoration: underline;
+            color: #a8d8f0;
+        }
+
+        .source-tag {
+            color: #666;
+            font-size: 0.75rem;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        .empty-state h2 {
+            color: #888;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 3rem;
+            padding-top: 1rem;
+            border-top: 1px solid #222;
+            color: #555;
+            font-size: 0.75rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Brief</h1>
+        <div class="date">{{ date }}</div>
+    </header>
+
+    {% if top_3 %}
+    <section class="top-3">
+        <h2>Top 3 — If You Only Have 2 Minutes</h2>
+        {% for item in top_3 %}
+        <div class="top-3-item">
+            <strong>{{ item.headline }}</strong>
+            <p>{{ item.summary }}</p>
+        </div>
+        {% endfor %}
+    </section>
+    {% endif %}
+
+    {% if clusters %}
+        {% for cluster in clusters %}
+        <section class="cluster">
+            <h2>{{ cluster.headline }}</h2>
+
+            {% if cluster.builders_summary %}
+            <div class="lane lane-builders">
+                <div class="lane-header">Builders</div>
+                <p>{{ cluster.builders_summary }}</p>
+                <div class="deep-links">
+                    {% for item in cluster.builders_items %}
+                    <a href="{{ item.url }}" target="_blank">{{ item.title|truncate(60) }} <span class="source-tag">[{{ item.source_name }}]</span></a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if cluster.security_summary %}
+            <div class="lane lane-security">
+                <div class="lane-header">Security</div>
+                <p>{{ cluster.security_summary }}</p>
+                <div class="deep-links">
+                    {% for item in cluster.security_items %}
+                    <a href="{{ item.url }}" target="_blank">{{ item.title|truncate(60) }} <span class="source-tag">[{{ item.source_name }}]</span></a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if cluster.business_summary %}
+            <div class="lane lane-business">
+                <div class="lane-header">Business</div>
+                <p>{{ cluster.business_summary }}</p>
+                <div class="deep-links">
+                    {% for item in cluster.business_items %}
+                    <a href="{{ item.url }}" target="_blank">{{ item.title|truncate(60) }} <span class="source-tag">[{{ item.source_name }}]</span></a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </section>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <h2>No new content today</h2>
+            <p>Either the sources didn't publish anything new, or the pipeline didn't find items worth including.</p>
+        </div>
+    {% endif %}
+
+    <footer>
+        Generated by Brief — Your daily AI digest
+    </footer>
+</body>
+</html>
