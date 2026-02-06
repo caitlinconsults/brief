@@ -43,6 +43,14 @@ SOURCE_DOMAINS = {
     "yc-blog": ["ycombinator.com", "www.ycombinator.com"],
     "anthropic-safety": ["anthropic.com", "www.anthropic.com"],
     "salesforce-eng": ["engineering.salesforce.com"],
+    # Team Brief sources
+    "one-useful-thing": ["oneusefulthing.org", "www.oneusefulthing.org", "oneusefulthing.substack.com"],
+    "openai-blog": ["openai.com", "www.openai.com"],
+    "the-verge": ["theverge.com", "www.theverge.com"],
+    "mit-tech-review": ["technologyreview.com", "www.technologyreview.com"],
+    "zapier": ["zapier.com", "www.zapier.com"],
+    "marketing-ai-institute": ["marketingaiinstitute.com", "www.marketingaiinstitute.com"],
+    "bens-bites": ["bensbites.com", "www.bensbites.com", "bensbites.beehiiv.com"],
 }
 
 

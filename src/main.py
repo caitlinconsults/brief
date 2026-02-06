@@ -2,8 +2,11 @@
 
 Runs the full daily pipeline:
   ingest → enrich → rank → generate digest → deliver
+
+Supports multiple profiles (e.g. technical, team) via --profile flag.
 """
 
+import argparse
 import logging
 import sys
 from datetime import datetime, timezone
@@ -34,28 +37,57 @@ logging.basicConfig(
 )
 logger = logging.getLogger("brief")
 
-CONFIG_DIR = Path(__file__).parent.parent / "config"
+PROJECT_ROOT = Path(__file__).parent.parent
+CONFIG_DIR = PROJECT_ROOT / "config"
+PROFILES_DIR = CONFIG_DIR / "profiles"
 
 
-def load_sources():
-    with open(CONFIG_DIR / "sources.yaml") as f:
+def load_profile(profile_name):
+    """Load a profile config from config/profiles/{name}.yaml.
+
+    If a {name}.local.yaml exists, its values are merged on top.
+    This lets orgs keep private config (tool policies, etc.) out of the repo.
+    """
+    profile_path = PROFILES_DIR / f"{profile_name}.yaml"
+    if not profile_path.exists():
+        raise FileNotFoundError(f"Profile not found: {profile_path}")
+    with open(profile_path) as f:
+        profile = yaml.safe_load(f)
+
+    local_path = PROFILES_DIR / f"{profile_name}.local.yaml"
+    if local_path.exists():
+        with open(local_path) as f:
+            local = yaml.safe_load(f) or {}
+        profile.update(local)
+        logger.info("Merged local overrides from %s", local_path.name)
+
+    return profile
+
+
+def load_sources(profile):
+    """Load sources from the profile's configured sources file."""
+    sources_file = profile.get("sources_file", "sources.yaml")
+    with open(CONFIG_DIR / sources_file) as f:
         config = yaml.safe_load(f)
     return config.get("sources", [])
 
 
-def run_pipeline():
-    """Run the full Brief pipeline end-to-end."""
+def run_pipeline(profile_name="technical"):
+    """Run the full Brief pipeline end-to-end for a given profile."""
+    profile = load_profile(profile_name)
+    brief_name = profile.get("name", "Brief")
     run_date = datetime.now().strftime("%Y-%m-%d")  # Local time, not UTC
-    logger.info("=== Brief pipeline starting for %s ===", run_date)
+    logger.info("=== %s pipeline starting for %s ===", brief_name, run_date)
 
-    # Initialize
-    conn = db.get_connection()
+    # Each profile gets its own database
+    db_path = PROJECT_ROOT / profile.get("db_name", "brief.db")
+    conn = db.get_connection(db_path)
     db.init_db(conn)
     run_id = db.start_pipeline_run(conn, run_date)
 
     try:
         # Load source registry
-        sources = load_sources()
+        sources = load_sources(profile)
         enabled = [s for s in sources if s.get("enabled")]
         logger.info("Sources: %d total, %d enabled", len(sources), len(enabled))
 
@@ -68,14 +100,15 @@ def run_pipeline():
 
         # Step 1: Ingest
         logger.info("--- Step 1: Ingestion ---")
-        items_ingested = ingest_sources(conn, sources, run_date)
+        max_age_days = profile.get("max_age_days", 7)
+        items_ingested = ingest_sources(conn, sources, run_date, max_age_days=max_age_days)
         logger.info("Ingested %d new items", items_ingested)
         db.update_pipeline_run(conn, run_id, items_ingested=items_ingested)
 
         # Step 2: Enrich
         logger.info("--- Step 2: Enrichment ---")
         client = anthropic.Anthropic()
-        items_enriched = enrich_items(conn, client)
+        items_enriched = enrich_items(conn, client, profile)
         logger.info("Enriched %d items", items_enriched)
         db.update_pipeline_run(conn, run_id, items_enriched=items_enriched)
 
@@ -88,11 +121,12 @@ def run_pipeline():
 
         # Step 4: Generate digest
         logger.info("--- Step 4: Digest generation ---")
-        html = generate_digest(clusters, client, run_date)
+        html = generate_digest(clusters, client, run_date, profile)
 
         # Step 5: Deliver
         logger.info("--- Step 5: Delivery ---")
-        file_path = deliver_digest(conn, html, run_date)
+        output_prefix = profile.get("output_prefix", "brief")
+        file_path = deliver_digest(conn, html, run_date, output_prefix=output_prefix)
 
         if file_path:
             # Mark selected items as published
@@ -108,7 +142,7 @@ def run_pipeline():
         # Done
         db.update_pipeline_run(conn, run_id, status="completed",
                                completed_at=db.now_iso())
-        logger.info("=== Brief pipeline completed successfully ===")
+        logger.info("=== %s pipeline completed successfully ===", brief_name)
 
     except Exception as e:
         logger.exception("Pipeline failed: %s", e)
@@ -116,7 +150,8 @@ def run_pipeline():
                                completed_at=db.now_iso(),
                                error_message=str(e))
         # Deliver error page
-        error_path = deliver_error(run_date, str(e))
+        output_prefix = profile.get("output_prefix", "brief")
+        error_path = deliver_error(run_date, str(e), output_prefix=output_prefix)
         if error_path:
             open_digest(error_path)
 
@@ -124,5 +159,25 @@ def run_pipeline():
         conn.close()
 
 
+def main():
+    parser = argparse.ArgumentParser(description="Run the Brief pipeline")
+    parser.add_argument(
+        "--profile",
+        default="technical",
+        help="Profile to run: technical, team, or all (default: technical)"
+    )
+    args = parser.parse_args()
+
+    if args.profile == "all":
+        for profile_name in ["technical", "team"]:
+            try:
+                run_pipeline(profile_name)
+            except Exception as e:
+                logger.error("Profile '%s' failed: %s", profile_name, e)
+                # Continue with next profile — don't let one failure block the other
+    else:
+        run_pipeline(args.profile)
+
+
 if __name__ == "__main__":
-    run_pipeline()
+    main()

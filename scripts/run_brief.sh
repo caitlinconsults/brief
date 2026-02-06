@@ -20,8 +20,13 @@ fi
 echo $$ > "$LOCK_FILE"
 trap "rm -f $LOCK_FILE" EXIT
 
-# Run the pipeline
-python -m src.main 2>&1 | tee -a "$BRIEF_DIR/brief.log"
+# Always run the technical brief (daily)
+python -m src.main --profile technical 2>&1 | tee -a "$BRIEF_DIR/brief.log"
+
+# Run the team brief on Thursdays only (day 4)
+if [ "$(date +%u)" = "4" ]; then
+    python -m src.main --profile team 2>&1 | tee -a "$BRIEF_DIR/brief.log"
+fi
 
 # Put the Mac back to sleep after the pipeline finishes
 # (it was woken at 4:55 AM just for this — no reason to stay on)

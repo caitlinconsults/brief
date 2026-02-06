@@ -2,6 +2,10 @@
 .env
 !.env.example
 
+# Local profile overrides (org-specific tool policies, etc.)
+config/profiles/*.local.yaml
+!config/profiles/*.local.yaml.example
+
 # Python
 __pycache__/
 *.py[cod]

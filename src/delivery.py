@@ -14,12 +14,12 @@ logger = logging.getLogger(__name__)
 DEFAULT_OUTPUT_DIR = Path.home() / "Briefs"
 
 
-def deliver_digest(conn, html_content, run_date, output_dir=None):
+def deliver_digest(conn, html_content, run_date, output_dir=None, output_prefix="brief"):
     """Save the digest HTML to a file and return the file path."""
     output_dir = Path(output_dir) if output_dir else DEFAULT_OUTPUT_DIR
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    filename = f"brief-{run_date}.html"
+    filename = f"{output_prefix}-{run_date}.html"
     file_path = output_dir / filename
 
     # Idempotency: don't overwrite if already delivered
@@ -34,12 +34,12 @@ def deliver_digest(conn, html_content, run_date, output_dir=None):
     return file_path
 
 
-def deliver_error(run_date, error_message, output_dir=None):
+def deliver_error(run_date, error_message, output_dir=None, output_prefix="brief"):
     """Save an error page when the pipeline fails."""
     output_dir = Path(output_dir) if output_dir else DEFAULT_OUTPUT_DIR
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    filename = f"brief-{run_date}-error.html"
+    filename = f"{output_prefix}-{run_date}-error.html"
     file_path = output_dir / filename
 
     html = f"""<!DOCTYPE html>

@@ -21,7 +21,7 @@ REQUEST_TIMEOUT = 30
 MAX_AGE_DAYS = 7
 
 
-def ingest_sources(conn, sources, run_date):
+def ingest_sources(conn, sources, run_date, max_age_days=MAX_AGE_DAYS):
     """Ingest content from all enabled sources. Returns count of new items."""
     total_new = 0
 
@@ -35,7 +35,7 @@ def ingest_sources(conn, sources, run_date):
         start_time = time.time()
         try:
             if method == "rss":
-                items = fetch_rss(source)
+                items = fetch_rss(source, max_age_days=max_age_days)
             elif method == "api":
                 items = fetch_api(source)
             else:
@@ -66,7 +66,7 @@ def ingest_sources(conn, sources, run_date):
     return total_new
 
 
-def fetch_rss(source):
+def fetch_rss(source, max_age_days=MAX_AGE_DAYS):
     """Fetch and parse an RSS/Atom feed. Returns normalized content items."""
     slug = source["slug"]
     url = source["fetch_url"]
@@ -112,11 +112,19 @@ def fetch_rss(source):
         if published:
             try:
                 pub_dt = datetime.fromisoformat(published)
-                cutoff = datetime.now(timezone.utc) - timedelta(days=MAX_AGE_DAYS)
+                cutoff = datetime.now(timezone.utc) - timedelta(days=max_age_days)
                 if pub_dt < cutoff:
                     continue
             except (ValueError, TypeError):
                 pass
+
+        # Keyword pre-filter: skip non-matching articles from broad sources
+        keyword_filter = source.get("keyword_filter")
+        if keyword_filter:
+            title_lower = entry.get("title", "").lower()
+            text_lower = raw_text[:2000].lower()
+            if not any(kw in title_lower or kw in text_lower for kw in keyword_filter):
+                continue
 
         items.append({
             "title": entry.get("title", "Untitled"),
