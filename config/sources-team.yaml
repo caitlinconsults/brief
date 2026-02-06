@@ -1,18 +1,6 @@
 sources:
   # === TRY THIS LANE ===
 
-  - name: "One Useful Thing"
-    slug: one-useful-thing
-    enabled: true
-    fetch_method: rss
-    fetch_url: "https://www.oneusefulthing.org/feed"
-    lanes:
-      primary: builders
-      secondary: [business]
-    trust_weight: 0.9
-    fetch_cadence: daily
-    content_type: newsletter
-
   - name: "Zapier Blog"
     slug: zapier
     enabled: true
@@ -48,14 +36,28 @@ sources:
     fetch_cadence: daily
     content_type: blog_post
 
+  # === MAKES YOU THINK LANE ===
+
+  - name: "One Useful Thing"
+    slug: one-useful-thing
+    enabled: true
+    fetch_method: rss
+    fetch_url: "https://www.oneusefulthing.org/feed"
+    lanes:
+      primary: business
+      secondary: [builders]
+    trust_weight: 0.9
+    fetch_cadence: daily
+    content_type: newsletter
+
   - name: "Ben's Bites"
     slug: bens-bites
     enabled: true
     fetch_method: rss
     fetch_url: "https://www.bensbites.com/feed"
     lanes:
-      primary: builders
-      secondary: []
+      primary: business
+      secondary: [builders]
     trust_weight: 0.8
     fetch_cadence: daily
     content_type: newsletter
@@ -71,62 +73,3 @@ sources:
       - marketing
       - writing
       - email
-
-  # === BIG NEWS LANE ===
-
-  - name: "OpenAI Blog"
-    slug: openai-blog
-    enabled: true
-    fetch_method: rss
-    fetch_url: "https://openai.com/news/rss.xml"
-    lanes:
-      primary: security
-      secondary: [builders]
-    trust_weight: 0.85
-    fetch_cadence: daily
-    content_type: blog_post
-
-  - name: "The Verge"
-    slug: the-verge
-    enabled: true
-    fetch_method: rss
-    fetch_url: "https://www.theverge.com/rss/index.xml"
-    lanes:
-      primary: security
-      secondary: []
-    trust_weight: 0.75
-    fetch_cadence: daily
-    content_type: news_article
-    keyword_filter:
-      - ai
-      - artificial intelligence
-      - chatgpt
-      - copilot
-      - openai
-      - google gemini
-      - claude
-      - machine learning
-      - gpt
-
-  # === MAKES YOU THINK LANE ===
-
-  - name: "MIT Technology Review"
-    slug: mit-tech-review
-    enabled: true
-    fetch_method: rss
-    fetch_url: "https://www.technologyreview.com/feed/"
-    lanes:
-      primary: business
-      secondary: []
-    trust_weight: 0.85
-    fetch_cadence: daily
-    content_type: news_article
-    keyword_filter:
-      - ai
-      - artificial intelligence
-      - machine learning
-      - automation
-      - chatbot
-      - openai
-      - copilot
-      - gpt
