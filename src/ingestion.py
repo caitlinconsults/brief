@@ -6,7 +6,7 @@ and stores it in the database.
 
 import logging
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import feedparser
 import requests
@@ -18,6 +18,7 @@ from .security import sanitize_content, verify_url
 logger = logging.getLogger(__name__)
 
 REQUEST_TIMEOUT = 30
+MAX_AGE_DAYS = 7
 
 
 def ingest_sources(conn, sources, run_date):
@@ -107,6 +108,16 @@ def fetch_rss(source):
             except (TypeError, ValueError):
                 pass
 
+        # Skip items older than MAX_AGE_DAYS
+        if published:
+            try:
+                pub_dt = datetime.fromisoformat(published)
+                cutoff = datetime.now(timezone.utc) - timedelta(days=MAX_AGE_DAYS)
+                if pub_dt < cutoff:
+                    continue
+            except (ValueError, TypeError):
+                pass
+
         items.append({
             "title": entry.get("title", "Untitled"),
             "url": link,
@@ -151,15 +162,27 @@ def fetch_hacker_news(source):
             if not story or story.get("type") != "story" or not story.get("url"):
                 continue
 
+            published = datetime.fromtimestamp(
+                story.get("time", 0), tz=timezone.utc
+            ).isoformat() if story.get("time") else None
+
+            # Skip items older than MAX_AGE_DAYS
+            if published:
+                try:
+                    pub_dt = datetime.fromisoformat(published)
+                    cutoff = datetime.now(timezone.utc) - timedelta(days=MAX_AGE_DAYS)
+                    if pub_dt < cutoff:
+                        continue
+                except (ValueError, TypeError):
+                    pass
+
             items.append({
                 "title": story.get("title", "Untitled"),
                 "url": story["url"],
                 "source_slug": "hacker-news",
                 "source_name": source["name"],
                 "source_type": "api",
-                "published_date": datetime.fromtimestamp(
-                    story.get("time", 0), tz=timezone.utc
-                ).isoformat() if story.get("time") else None,
+                "published_date": published,
                 "content_type": "news_article",
                 "raw_text": story.get("title", ""),  # HN stories are links, title is the content
             })

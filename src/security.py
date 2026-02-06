@@ -33,7 +33,7 @@ SOURCE_DOMAINS = {
     "simon-willison": ["simonwillison.net"],
     "hacker-news": ["news.ycombinator.com", "ycombinator.com"],
     "latent-space": ["latent.space", "www.latent.space"],
-    "langchain": ["blog.langchain.dev", "langchain.dev"],
+    "langchain": ["blog.langchain.dev", "langchain.dev", "blog.langchain.com", "langchain.com"],
     "lilian-weng": ["lilianweng.github.io"],
     "trail-of-bits": ["blog.trailofbits.com", "trailofbits.com"],
     "shreyas-doshi": ["shreyas.substack.com"],

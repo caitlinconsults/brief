@@ -89,7 +89,7 @@ sources:
 
   - name: "Shreyas Doshi Newsletter"
     slug: shreyas-doshi
-    enabled: true
+    enabled: false
     fetch_method: rss
     fetch_url: "https://shreyas.substack.com/feed"
     lanes:
