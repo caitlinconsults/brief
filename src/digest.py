@@ -119,12 +119,17 @@ def generate_digest(clusters, client, run_date, profile=None):
     system_prompt = (profile or {}).get("digest_system_prompt", DEFAULT_DIGEST_SYSTEM_PROMPT)
     tool_policy = _build_tool_policy(profile)
 
+    # Identify disabled lanes from profile config
+    lanes = (profile or {}).get("lanes", {})
+    disabled_lanes = [k for k in ("builders", "security", "business")
+                      if lanes.get(k, {}).get("enabled") is False]
+
     # Generate synthesis for each cluster
     digest_clusters = []
     for cluster in clusters:
         try:
             synthesis = synthesize_cluster(client, cluster, lane_config, system_prompt, tool_policy)
-            digest_clusters.append({
+            dc = {
                 "headline": synthesis.get("cluster_headline", cluster["cluster_topic"]),
                 "builders_summary": synthesis.get("builders_summary"),
                 "security_summary": synthesis.get("security_summary"),
@@ -132,7 +137,12 @@ def generate_digest(clusters, client, run_date, profile=None):
                 "builders_items": cluster["builders"],
                 "security_items": cluster["security"],
                 "business_items": cluster["business"],
-            })
+            }
+            # Null out disabled lanes (Claude sometimes writes them anyway)
+            for lane_key in disabled_lanes:
+                dc[f"{lane_key}_summary"] = None
+                dc[f"{lane_key}_items"] = []
+            digest_clusters.append(dc)
         except Exception as e:
             logger.error("Failed to synthesize cluster %s: %s",
                          cluster["cluster_topic"], e)
@@ -146,6 +156,14 @@ def generate_digest(clusters, client, run_date, profile=None):
                 "security_items": cluster["security"],
                 "business_items": cluster["business"],
             })
+
+    # Filter out clusters with no visible lane content
+    digest_clusters = [dc for dc in digest_clusters
+                       if dc.get("builders_summary") or dc.get("security_summary")
+                       or dc.get("business_summary")]
+
+    if not digest_clusters:
+        return generate_empty_digest(run_date, profile)
 
     # Generate top 3
     top_3 = generate_top_3(client, digest_clusters, system_prompt)
@@ -183,30 +201,19 @@ def format_cluster_items(cluster, lane_config):
     """Format cluster items for the Claude prompt."""
     sections = []
 
-    builders_name = lane_config.get("builders", {}).get("display_name", "Builders").upper()
-    security_name = lane_config.get("security", {}).get("display_name", "Security").upper()
-    business_name = lane_config.get("business", {}).get("display_name", "Business").upper()
-
-    if cluster["builders"]:
-        sections.append(f"{builders_name} LANE:")
-        for item in cluster["builders"]:
-            sections.append(f"  - {item['title']} [{item['source_name']}]")
-            if item.get("summary_short"):
-                sections.append(f"    {item['summary_short']}")
-
-    if cluster["security"]:
-        sections.append(f"{security_name} LANE:")
-        for item in cluster["security"]:
-            sections.append(f"  - {item['title']} [{item['source_name']}]")
-            if item.get("summary_short"):
-                sections.append(f"    {item['summary_short']}")
-
-    if cluster["business"]:
-        sections.append(f"{business_name} LANE:")
-        for item in cluster["business"]:
-            sections.append(f"  - {item['title']} [{item['source_name']}]")
-            if item.get("summary_short"):
-                sections.append(f"    {item['summary_short']}")
+    for lane_key in ("builders", "security", "business"):
+        config = lane_config.get(lane_key, {})
+        # Skip disabled lanes entirely — don't even mention them to Claude
+        if config.get("enabled") is False:
+            continue
+        items = cluster.get(lane_key, [])
+        if items:
+            name = config.get("display_name", lane_key.title()).upper()
+            sections.append(f"{name} LANE:")
+            for item in items:
+                sections.append(f"  - {item['title']} [{item['source_name']}]")
+                if item.get("summary_short"):
+                    sections.append(f"    {item['summary_short']}")
 
     return "\n".join(sections)
 
@@ -229,7 +236,7 @@ def generate_top_3(client, digest_clusters, system_prompt):
         try:
             response = client.messages.create(
                 model="claude-sonnet-4-5-20250929",
-                max_tokens=1024,
+                max_tokens=2048,
                 system=system_prompt,
                 messages=[{"role": "user", "content": user_message}],
             )

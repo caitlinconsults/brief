@@ -1,4 +1,4 @@
-name: "Brief"
+name: "Technical Brief"
 output_prefix: "brief"
 db_name: "brief.db"
 

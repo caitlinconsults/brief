@@ -1,5 +1,5 @@
 sources:
-  # === TRY THIS LANE ===
+  # === BIG NEWS LANE ===
 
   - name: "Zapier Blog"
     slug: zapier
@@ -7,8 +7,8 @@ sources:
     fetch_method: rss
     fetch_url: "https://zapier.com/blog/feeds/latest/"
     lanes:
-      primary: builders
-      secondary: []
+      primary: security
+      secondary: [business]
     trust_weight: 0.85
     fetch_cadence: daily
     content_type: blog_post
@@ -24,40 +24,14 @@ sources:
       - automation
       - artificial intelligence
 
-  - name: "Marketing AI Institute"
-    slug: marketing-ai-institute
-    enabled: true
-    fetch_method: rss
-    fetch_url: "https://www.marketingaiinstitute.com/blog/rss.xml"
-    lanes:
-      primary: builders
-      secondary: [business]
-    trust_weight: 0.85
-    fetch_cadence: daily
-    content_type: blog_post
-
-  # === MAKES YOU THINK LANE ===
-
-  - name: "One Useful Thing"
-    slug: one-useful-thing
-    enabled: true
-    fetch_method: rss
-    fetch_url: "https://www.oneusefulthing.org/feed"
-    lanes:
-      primary: business
-      secondary: [builders]
-    trust_weight: 0.9
-    fetch_cadence: daily
-    content_type: newsletter
-
   - name: "Ben's Bites"
     slug: bens-bites
     enabled: true
     fetch_method: rss
     fetch_url: "https://www.bensbites.com/feed"
     lanes:
-      primary: business
-      secondary: [builders]
+      primary: security
+      secondary: [business]
     trust_weight: 0.8
     fetch_cadence: daily
     content_type: newsletter
@@ -73,3 +47,29 @@ sources:
       - marketing
       - writing
       - email
+
+  # === MAKES YOU THINK LANE ===
+
+  - name: "Marketing AI Institute"
+    slug: marketing-ai-institute
+    enabled: false  # Content is primarily event/summit promotion disguised as thought leadership
+    fetch_method: rss
+    fetch_url: "https://www.marketingaiinstitute.com/blog/rss.xml"
+    lanes:
+      primary: business
+      secondary: [security]
+    trust_weight: 0.85
+    fetch_cadence: daily
+    content_type: blog_post
+
+  - name: "One Useful Thing"
+    slug: one-useful-thing
+    enabled: true
+    fetch_method: rss
+    fetch_url: "https://www.oneusefulthing.org/feed"
+    lanes:
+      primary: business
+      secondary: []
+    trust_weight: 0.9
+    fetch_cadence: daily
+    content_type: newsletter

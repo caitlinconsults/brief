@@ -185,14 +185,15 @@ def select_for_digest(items, selection_config):
                 added = True
 
             # If no lane scored above threshold, add to the highest-scoring lane
+            # (skip if all lanes are 0.0 — item doesn't fit any lane)
             if not added:
-                best_lane = max(
+                best_lane, best_score = max(
                     [("builders", item.get("lane_builders", 0)),
                      ("security", item.get("lane_security", 0)),
                      ("business", item.get("lane_business", 0))],
                     key=lambda x: x[1]
-                )[0]
-                if len(selected[best_lane]) < max_per_lane:
+                )
+                if best_score > 0 and len(selected[best_lane]) < max_per_lane:
                     selected[best_lane].append(item)
 
             selected["all_items"].append(item)
