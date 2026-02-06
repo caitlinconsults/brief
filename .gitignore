@@ -17,6 +17,9 @@ venv/
 *.sqlite
 *.sqlite3
 
+# Logs
+*.log
+
 # macOS
 .DS_Store
 
