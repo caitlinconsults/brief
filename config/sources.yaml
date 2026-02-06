@@ -27,7 +27,7 @@ sources:
 
   - name: "Latent Space"
     slug: latent-space
-    enabled: false
+    enabled: true
     fetch_method: rss
     fetch_url: "https://www.latent.space/feed"
     lanes:
@@ -51,7 +51,7 @@ sources:
 
   - name: "LangChain Blog"
     slug: langchain
-    enabled: false
+    enabled: true
     fetch_method: rss
     fetch_url: "https://blog.langchain.dev/rss/"
     lanes:
@@ -63,7 +63,7 @@ sources:
 
   - name: "Lilian Weng Blog"
     slug: lilian-weng
-    enabled: false
+    enabled: true
     fetch_method: rss
     fetch_url: "https://lilianweng.github.io/index.xml"
     lanes:
@@ -89,7 +89,7 @@ sources:
 
   - name: "Shreyas Doshi Newsletter"
     slug: shreyas-doshi
-    enabled: false
+    enabled: true
     fetch_method: rss
     fetch_url: "https://shreyas.substack.com/feed"
     lanes:
@@ -113,7 +113,7 @@ sources:
 
   - name: "Not Boring"
     slug: not-boring
-    enabled: false
+    enabled: true
     fetch_method: rss
     fetch_url: "https://www.notboring.co/feed"
     lanes:
@@ -187,7 +187,7 @@ sources:
 
   - name: "Trail of Bits Blog"
     slug: trail-of-bits
-    enabled: false
+    enabled: true
     fetch_method: rss
     fetch_url: "https://blog.trailofbits.com/feed/"
     lanes:
