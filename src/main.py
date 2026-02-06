@@ -45,7 +45,7 @@ def load_sources():
 
 def run_pipeline():
     """Run the full Brief pipeline end-to-end."""
-    run_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    run_date = datetime.now().strftime("%Y-%m-%d")  # Local time, not UTC
     logger.info("=== Brief pipeline starting for %s ===", run_date)
 
     # Initialize
