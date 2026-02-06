@@ -4,7 +4,7 @@ Saves the digest as an HTML file to ~/Briefs/ and handles auto-open tracking.
 """
 
 import logging
-import subprocess
+import webbrowser
 from pathlib import Path
 
 from . import database as db
@@ -72,9 +72,9 @@ def deliver_error(run_date, error_message, output_dir=None):
 
 
 def open_digest(file_path):
-    """Open the digest in the default browser (macOS)."""
+    """Open the digest in the default browser."""
     try:
-        subprocess.run(["open", str(file_path)], check=True)
+        webbrowser.open(Path(file_path).as_uri())
         logger.info("Opened digest in browser: %s", file_path)
     except Exception as e:
         logger.warning("Failed to open digest: %s", e)
