@@ -16,16 +16,22 @@ logger = logging.getLogger(__name__)
 
 TEMPLATES_DIR = Path(__file__).parent.parent / "templates"
 
-DIGEST_SYSTEM_PROMPT = """You are an editorial writer for a daily AI brief called Brief. \
-You synthesize multiple content items into concise, strategic summaries. \
-Write for an AI strategist who wants to understand what matters and why, not a researcher. \
-Use plain, direct language. You MUST respond with valid JSON only — no markdown wrapping."""
+DIGEST_SYSTEM_PROMPT = """You are a writer for a daily AI brief called Brief. \
+You summarize source material faithfully and concisely. \
+Stay grounded in what sources actually say — do not generalize, editorialize, or make claims \
+that go beyond the scope of the source material. If one person shares an anecdote, report it \
+as an anecdote, not as an industry trend. Use plain, direct language. \
+You MUST respond with valid JSON only — no markdown wrapping."""
 
 CLUSTER_PROMPT_TEMPLATE = """Generate a digest section for this topic cluster.
 
-For each relevant lane, write a 2-4 sentence synthesis. Don't just summarize individual items — \
-synthesize across them and highlight what matters. If lanes offer different perspectives on the \
-same topic, highlight the tension.
+For each relevant lane, write a detailed 4-8 sentence summary that faithfully represents what the sources say. \
+Give the reader enough context to understand each development without clicking through. \
+Include specific details — names, numbers, quotes, concrete examples — not just high-level takeaways. \
+Attribute specific claims to their sources (e.g., "According to..." or "X describes..."). \
+Do not extrapolate individual anecdotes into broad industry trends. If one person shares a personal \
+experience, say so — don't frame it as a market shift. Connect related items where the sources \
+themselves overlap, but don't add analysis that isn't in the source material.
 
 Only include a lane if there are items for it below. If a lane has no items, set its summary to null.
 
@@ -44,7 +50,8 @@ Topic: {cluster_topic}
 {items_text}"""
 
 TOP3_PROMPT_TEMPLATE = """Pick the 3 most important developments from today's digest and write \
-a one-sentence summary of each. These are for a reader who only has 2 minutes.
+a one-sentence summary of each. These are for a reader who only has 2 minutes. \
+Stay faithful to what sources actually reported — don't inflate or generalize.
 
 Respond with exactly this JSON:
 {{
@@ -114,7 +121,7 @@ def synthesize_cluster(client, cluster):
 
     response = client.messages.create(
         model="claude-sonnet-4-5-20250929",
-        max_tokens=1024,
+        max_tokens=2048,
         system=DIGEST_SYSTEM_PROMPT,
         messages=[{"role": "user", "content": user_message}],
     )
@@ -169,24 +176,31 @@ def generate_top_3(client, digest_clusters):
         clusters_text="\n".join(clusters_text)
     )
 
-    try:
-        response = client.messages.create(
-            model="claude-sonnet-4-5-20250929",
-            max_tokens=512,
-            system=DIGEST_SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": user_message}],
-        )
+    for attempt in range(2):
+        try:
+            response = client.messages.create(
+                model="claude-sonnet-4-5-20250929",
+                max_tokens=1024,
+                system=DIGEST_SYSTEM_PROMPT,
+                messages=[{"role": "user", "content": user_message}],
+            )
 
-        text = response.content[0].text.strip()
-        if text.startswith("```"):
-            lines = text.split("\n")
-            text = "\n".join(lines[1:-1])
+            text = response.content[0].text.strip()
+            if text.startswith("```"):
+                lines = text.split("\n")
+                text = "\n".join(lines[1:-1])
 
-        result = json.loads(text)
-        return result.get("top_3", [])
-    except Exception as e:
-        logger.error("Failed to generate top 3: %s", e)
-        return []
+            result = json.loads(text)
+            return result.get("top_3", [])
+        except json.JSONDecodeError as e:
+            logger.warning("Top 3 JSON parse failed (attempt %d): %s\nRaw: %s",
+                           attempt + 1, e, text[:500])
+            if attempt == 0:
+                continue
+        except Exception as e:
+            logger.error("Failed to generate top 3: %s", e)
+            break
+    return []
 
 
 def render_digest(run_date, top_3, clusters):

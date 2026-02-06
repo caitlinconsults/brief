@@ -134,18 +134,19 @@ def enrich_single_item(client, item):
 
 
 def cluster_items(items):
-    """Cluster items by topic tag overlap. Returns items with cluster_id assigned.
+    """Cluster items by topic tags. Returns items with cluster_id assigned.
 
-    Simple deterministic clustering: items sharing their primary topic tag
-    are grouped together. This avoids heavy ML dependencies for MVP.
+    Two-pass clustering: first group by full subtopic (e.g. "agents > orchestration"),
+    then merge any clusters with fewer than MIN_CLUSTER_SIZE items into their
+    parent category (e.g. "agents"). This balances variety with substance.
     """
+    MIN_CLUSTER_SIZE = 3
+
     if not items:
         return items
 
-    # Extract primary topic for each item
-    clusters = {}  # primary_topic -> cluster_id
-    next_cluster_id = 0
-
+    # Pass 1: cluster by full subtopic
+    subtopic_groups = {}
     for item in items:
         topics = item.get("topics", "[]")
         if isinstance(topics, str):
@@ -154,17 +155,32 @@ def cluster_items(items):
             except json.JSONDecodeError:
                 topics = []
 
-        # Use the first topic's top-level category as the cluster key
         if topics:
-            primary = topics[0].split(" > ")[0] if " > " in topics[0] else topics[0]
+            primary = topics[0]
         else:
             primary = "uncategorized"
 
-        if primary not in clusters:
-            clusters[primary] = next_cluster_id
-            next_cluster_id += 1
+        item["_primary_topic"] = primary
+        item["_parent_topic"] = primary.split(" > ")[0] if " > " in primary else primary
+        subtopic_groups.setdefault(primary, []).append(item)
 
-        item["cluster_id"] = clusters[primary]
-        item["cluster_topic"] = primary
+    # Pass 2: merge small subtopic clusters into their parent category
+    final_groups = {}
+    for subtopic, group_items in subtopic_groups.items():
+        if len(group_items) >= MIN_CLUSTER_SIZE:
+            final_groups.setdefault(subtopic, []).extend(group_items)
+        else:
+            parent = group_items[0]["_parent_topic"]
+            final_groups.setdefault(parent, []).extend(group_items)
+
+    # Assign cluster IDs, sorted by group size (largest first)
+    sorted_keys = sorted(final_groups.keys(),
+                         key=lambda k: len(final_groups[k]), reverse=True)
+
+    cluster_map = {key: idx for idx, key in enumerate(sorted_keys)}
+    for key, group_items in final_groups.items():
+        for item in group_items:
+            item["cluster_id"] = cluster_map[key]
+            item["cluster_topic"] = key
 
     return items

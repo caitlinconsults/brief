@@ -117,11 +117,12 @@ def compute_score(item, weights, recency_config, trust_lookup, now):
 def select_for_digest(items, selection_config):
     """Select top items per cluster per lane for the digest.
 
-    Returns a list of clusters, each with selected items per lane.
+    Spreads the budget across clusters so no single cluster dominates.
+    Each cluster gets up to max_items_per_lane per lane, and we include
+    clusters until we hit the target digest size.
     """
     target_size = selection_config.get("target_digest_size", 20)
     max_per_lane = selection_config.get("max_items_per_lane", 3)
-    novelty_budget = selection_config.get("novelty_budget", 0.25)
 
     # Group items by cluster
     clusters = {}
@@ -135,19 +136,27 @@ def select_for_digest(items, selection_config):
             }
         clusters[cid]["items"].append(item)
 
-    # For each cluster, pick top items per lane
+    # Sort each cluster's items by relevance, then rank clusters by
+    # their best item's score so the most important clusters come first
+    for cluster in clusters.values():
+        cluster["items"].sort(key=lambda x: x.get("relevance_score", 0), reverse=True)
+
+    sorted_clusters = sorted(
+        clusters.values(),
+        key=lambda c: c["items"][0].get("relevance_score", 0) if c["items"] else 0,
+        reverse=True
+    )
+
+    # Select top items per lane from each cluster, spreading across clusters
     result = []
     total_selected = 0
 
-    for cid in sorted(clusters.keys()):
-        cluster = clusters[cid]
-        cluster_items = cluster["items"]
-
-        # Sort by relevance score descending
-        cluster_items.sort(key=lambda x: x.get("relevance_score", 0), reverse=True)
+    for cluster in sorted_clusters:
+        if total_selected >= target_size:
+            break
 
         selected = {
-            "cluster_id": cid,
+            "cluster_id": cluster["cluster_id"],
             "cluster_topic": cluster["cluster_topic"],
             "builders": [],
             "security": [],
@@ -155,8 +164,12 @@ def select_for_digest(items, selection_config):
             "all_items": [],
         }
 
-        for item in cluster_items:
-            if total_selected >= target_size:
+        for item in cluster["items"]:
+            # Check if this cluster's lanes are full
+            lanes_full = (len(selected["builders"]) >= max_per_lane and
+                          len(selected["security"]) >= max_per_lane and
+                          len(selected["business"]) >= max_per_lane)
+            if lanes_full or total_selected >= target_size:
                 break
 
             # Determine which lane(s) this item belongs to
@@ -188,12 +201,5 @@ def select_for_digest(items, selection_config):
         # Only include clusters that have at least one item in any lane
         if selected["builders"] or selected["security"] or selected["business"]:
             result.append(selected)
-
-    # Sort clusters by average relevance score (best clusters first)
-    result.sort(
-        key=lambda c: sum(i.get("relevance_score", 0) for i in c["all_items"])
-                       / max(len(c["all_items"]), 1),
-        reverse=True
-    )
 
     return result
