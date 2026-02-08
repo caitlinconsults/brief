@@ -8,6 +8,10 @@ cd "$BRIEF_DIR"
 # Activate virtual environment
 source "$BRIEF_DIR/venv/bin/activate"
 
+# Prevent macOS from sleeping while the pipeline runs
+# (Dark Wake can kill the process before it finishes)
+caffeinate -s -w $$ &
+
 # Prevent duplicate runs
 LOCK_FILE="$BRIEF_DIR/.brief.lock"
 if [ -f "$LOCK_FILE" ]; then
