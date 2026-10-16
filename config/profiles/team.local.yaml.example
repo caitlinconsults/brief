@@ -1,25 +1,24 @@
 # Local overrides for the Team Brief profile.
 # Copy this to team.local.yaml and customize for your organization.
 # This file is gitignored — your tool policy stays private.
+#
+# The tool names below are placeholders. Replace them with your own,
+# and keep the real list in team.local.yaml rather than here.
 
 # Tools your team is allowed to use. The digest will only recommend
 # tools from this list. Remove or add tools to match your org.
 allowed_tools:
-  - Microsoft Copilot
-  - Power Automate
-  - Microsoft 365
-  - SharePoint
-  - Teams
-  - ChatGPT
+  - Example Chat Assistant
+  - Example Office Suite
+  - Example Automation Tool
+  - Example Intranet Platform
+  - Example Meeting Tool
 
 # Tools the digest must never recommend, even if they appear in
 # source articles. Use this for tools that require admin access,
 # local installation, or a developer background.
 blocked_tools:
-  - Zapier
-  - Claude Code
-  - Cursor
-  - GitHub Copilot
-  - VS Code
-  - Homebrew
-  - MCP servers
+  - Example Code Editor
+  - Example CLI Tool
+  - Example Package Manager
+  - Example Developer Extension

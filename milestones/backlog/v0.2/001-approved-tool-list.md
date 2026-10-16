@@ -14,7 +14,7 @@
 - When `allowed_tools` is set, the enrichment prompt instructs Claude to only score items highly for the Try This lane if they involve tools from the approved list
 - When `blocked_tools` is set, the digest prompt instructs Claude to never recommend those tools, even if they appear in source material
 - If neither list is set, behavior is unchanged (no filtering)
-- The lists are plain strings (tool names as humans would say them: "Microsoft Copilot", "ChatGPT", "Power Automate") — not slugs or IDs
+- The lists are plain strings — tool names as humans would say them ("Example Chat Assistant", not `example-chat-assistant`), not slugs or IDs
 - The digest generation prompt includes the constraint so that lane summaries don't say "try downloading Cursor" when Cursor is blocked
 - Works for any profile, not just team — a future "security" profile might block consumer tools, for example
 
@@ -23,9 +23,12 @@
 The team profile would add something like:
 
 ```
-allowed_tools: Microsoft Copilot, ChatGPT, Power Automate, Microsoft 365, Google Gemini, Canva AI
-blocked_tools: Codex, GitHub Copilot, Claude Code, Cursor, VS Code extensions, Homebrew
+allowed_tools: Example Chat Assistant, Example Office Suite, Example Automation Tool
+blocked_tools: Example Code Editor, Example CLI Tool, Example Package Manager
 ```
+
+Real tool names stay in `config/profiles/team.local.yaml`, which is gitignored —
+an org's tool policy should not be committed.
 
 ## Success Criteria
 
