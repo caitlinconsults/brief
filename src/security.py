@@ -42,6 +42,8 @@ SOURCE_DOMAINS = {
     "a16z": ["a16z.com", "www.a16z.com"],
     "yc-blog": ["ycombinator.com", "www.ycombinator.com"],
     "anthropic-safety": ["anthropic.com", "www.anthropic.com"],
+    "anthropic-news": ["anthropic.com", "www.anthropic.com"],
+    "ai-realist": ["msukhareva.substack.com"],
     "salesforce-eng": ["engineering.salesforce.com"],
     # Team Brief sources
     "one-useful-thing": ["oneusefulthing.org", "www.oneusefulthing.org", "oneusefulthing.substack.com"],

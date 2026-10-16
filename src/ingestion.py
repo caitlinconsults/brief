@@ -20,6 +20,12 @@ logger = logging.getLogger(__name__)
 REQUEST_TIMEOUT = 30
 MAX_AGE_DAYS = 7
 
+# Some publishers return an error page to the default requests user agent
+BROWSER_USER_AGENT = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/131.0 Safari/537.36"
+)
+
 
 def ingest_sources(conn, sources, run_date, max_age_days=MAX_AGE_DAYS):
     """Ingest content from all enabled sources. Returns count of new items."""
@@ -38,6 +44,8 @@ def ingest_sources(conn, sources, run_date, max_age_days=MAX_AGE_DAYS):
                 items = fetch_rss(source, max_age_days=max_age_days)
             elif method == "api":
                 items = fetch_api(source)
+            elif method == "web_scrape":
+                items = fetch_web_scrape(source, max_age_days=max_age_days)
             else:
                 logger.info("Skipping %s: %s fetch not implemented yet", slug, method)
                 db.log_source_health(conn, slug, run_date, "skipped",
@@ -198,6 +206,108 @@ def fetch_hacker_news(source):
             logger.warning("Failed to fetch HN story %s: %s", story_id, e)
 
     return items
+
+
+def fetch_web_scrape(source, max_age_days=MAX_AGE_DAYS):
+    """Fetch content by scraping an index page. Currently only Anthropic News."""
+    slug = source["slug"]
+
+    if slug == "anthropic-news":
+        return fetch_anthropic_news(source, max_age_days=max_age_days)
+
+    logger.warning("Web scrape not implemented for %s", slug)
+    return []
+
+
+def fetch_anthropic_news(source, max_age_days=MAX_AGE_DAYS):
+    """Scrape anthropic.com/news — Anthropic publishes no RSS feed.
+
+    The index page carries title and date but no body, so each recent
+    article page is fetched for its text.
+    """
+    slug = source["slug"]
+    list_url = source["fetch_url"]
+
+    logger.info("Scraping: %s", list_url)
+    resp = requests.get(list_url, headers={"User-Agent": BROWSER_USER_AGENT},
+                        timeout=REQUEST_TIMEOUT)
+    resp.raise_for_status()
+    soup = BeautifulSoup(resp.text, "html.parser")
+
+    cutoff = datetime.now(timezone.utc) - timedelta(days=max_age_days)
+
+    items = []
+    seen = set()
+    for link in soup.select('a[href^="/news/"]'):
+        href = link.get("href")
+        if href in seen:
+            continue
+
+        time_el = link.find("time")
+        if not time_el:
+            continue  # not an article card
+
+        try:
+            published = datetime.strptime(
+                time_el.get_text(strip=True), "%b %d, %Y"
+            ).replace(tzinfo=timezone.utc)
+        except ValueError:
+            logger.warning("Unparseable date on %s: %s", href, time_el.get_text(strip=True))
+            continue
+
+        if published < cutoff:
+            continue
+
+        seen.add(href)
+        url = "https://www.anthropic.com" + href
+
+        if not verify_url(url, slug):
+            logger.warning("Skipping URL with domain mismatch: %s", url)
+            continue
+
+        spans = link.find_all("span")
+        title = spans[-1].get_text(strip=True) if spans else link.get_text(strip=True)
+
+        try:
+            raw_text = fetch_article_text(url)
+        except Exception as e:
+            # Keep the item — the title still carries signal for enrichment
+            logger.warning("Failed to fetch article body %s: %s", url, e)
+            raw_text = title
+
+        raw_text, _flags = sanitize_content(raw_text, slug)
+
+        items.append({
+            "title": title or "Untitled",
+            "url": url,
+            "source_slug": slug,
+            "source_name": source["name"],
+            "source_type": "web_scrape",
+            "published_date": published.isoformat(),
+            "content_type": source.get("content_type", "blog_post"),
+            "raw_text": raw_text,
+        })
+
+    return items
+
+
+def fetch_article_text(url):
+    """Fetch an article page and return its plain text."""
+    resp = requests.get(url, headers={"User-Agent": BROWSER_USER_AGENT},
+                        timeout=REQUEST_TIMEOUT)
+    resp.raise_for_status()
+
+    soup = BeautifulSoup(resp.text, "html.parser")
+    for tag in soup(["script", "style", "nav", "header", "footer"]):
+        tag.decompose()
+
+    main = soup.find("main") or soup.body
+    text = main.get_text(separator="\n", strip=True) if main else ""
+
+    if len(text) > 10000:
+        text = text[:10000] + "\n[... truncated]"
+
+    return text
 
 
 def extract_entry_text(entry):

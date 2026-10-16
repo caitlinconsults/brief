@@ -1,5 +1,5 @@
 sources:
-  # === BUILDERS LANE (7 sources) ===
+  # === BUILDERS LANE (8 sources) ===
 
   - name: "Simon Willison's Weblog"
     slug: simon-willison
@@ -69,6 +69,18 @@ sources:
     lanes:
       primary: builders
       secondary: []
+    trust_weight: 0.9
+    fetch_cadence: daily
+    content_type: blog_post
+
+  - name: "Anthropic News"
+    slug: anthropic-news
+    enabled: true
+    fetch_method: web_scrape
+    fetch_url: "https://www.anthropic.com/news"
+    lanes:
+      primary: builders
+      secondary: [security, business]
     trust_weight: 0.9
     fetch_cadence: daily
     content_type: blog_post
@@ -147,7 +159,7 @@ sources:
     fetch_cadence: daily
     content_type: blog_post
 
-  # === SECURITY LANE (4 sources) ===
+  # === SECURITY LANE (5 sources) ===
 
   - name: "OWASP AI/LLM Top 10"
     slug: owasp
@@ -184,6 +196,18 @@ sources:
     trust_weight: 0.9
     fetch_cadence: daily
     content_type: blog_post
+
+  - name: "AI Realist"
+    slug: ai-realist
+    enabled: true
+    fetch_method: rss
+    fetch_url: "https://msukhareva.substack.com/feed"
+    lanes:
+      primary: security
+      secondary: [business]
+    trust_weight: 0.8
+    fetch_cadence: daily
+    content_type: newsletter
 
   - name: "Trail of Bits Blog"
     slug: trail-of-bits
